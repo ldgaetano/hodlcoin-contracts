@@ -79,8 +79,6 @@
         val rcCircDelta = receiptBox.R4[Long].get
         val bcReserveDelta = receiptBox.R5[Long].get
 
-        val validBankValueDelta = bcReserveIn + bcReserveDelta == bcReserveOut
-
         //Used to calculate true collateral (excl dev fee still in contract)
         val bcReserveInExclFee = bankBoxIn.value - devFeeBaseIn
 
@@ -111,6 +109,8 @@
             //minting action so dev amt must stay the same
             devFeeBaseOut == devFeeBaseIn
         }
+
+        val validBankValueDelta = bcReserveIn + bcReserveDelta + (devFeeBaseOut - devFeeBaseIn) == bcReserveOut
         
         mandatoryBankConditions &&
         validRcDelta &&
