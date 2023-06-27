@@ -1,5 +1,5 @@
-﻿Notes:
-* After initialization 1 hodlERG should be burned so circulating supply is never zero.
+﻿//Notes:
+//* After initialization 1 hodlERG should be burned so circulating supply is never zero.
 
 {
     //Bank box
@@ -27,10 +27,10 @@
     val totalRcIn = rcTokensIn + rcCircIn
     val totalRcOut = rcTokensOut + rcCircOut
 
-    val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // also ensures that at least one token exists
-                            bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // also ensures that at least one token exists
+    val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
+                            bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
 
-    val coinsConserved = totalRcIn == totalRcOut
+    val coinsConserved = totalRcIn == totalRcOut//this check also makes sure R4 is not tampered with
 
     val mandatoryBankConditions =   bankBoxOut.value >= 10000000L &&
                                     bankBoxOut.propositionBytes == bankBoxIn.propositionBytes &&
@@ -48,7 +48,7 @@
 
             //Only allow withdrawal of dev fee if box values are at least 0.001 ERG
             if (devFeeAccumulatedSplitByThree >= 1000000L) {
-                val totalDevFeeSpent = (devFeeAccumulatedSplitByThree * 3L)//needed for rounding errors?
+                val totalDevFeeSpent = (devFeeAccumulatedSplitByThree * 3L)//account for rounding
 
                 //split devfee over 3 boxes
                 val devFeeBox1 = OUTPUTS(1)
@@ -56,7 +56,6 @@
                 val devFeeBox3 = OUTPUTS(3)
                 
                 //ToDo: On mainnet put in our own address!!
-                
 
                 (devFeeBaseIn - devFeeBaseOut) == totalDevFeeSpent &&
                 //devFeeBox1.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
@@ -70,11 +69,11 @@
 
         validDevFeeOutput &&
         mandatoryBankConditions &&
-        rcTokensOut == rcTokensIn &&//token registers must stay the same
+        rcTokensOut == rcTokensIn &&//token amounts must stay the same
+        rcCircOut == rcCircIn &&//token registers must stay the same
         validBankValueDelta
     } else {
         //Normal mint/redeem
-
         val receiptBox = OUTPUTS(1)
         val rcCircDelta = receiptBox.R4[Long].get
         val bcReserveDelta = receiptBox.R5[Long].get
