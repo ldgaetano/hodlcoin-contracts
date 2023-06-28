@@ -85,13 +85,22 @@
         noRoundingError &&
         noDust &&
         validDevFeeOutput &&
-        rcTokensOut == rcTokensIn && // token amounts must stay the same
-        rcCircOut == rcCircIn // token registers must stay the same
+        rcTokensOut == rcTokensIn && // amount of hodlERGs in the bank must stay the same
+        rcCircOut == rcCircIn // amount of hodlERGs in circulation must stay the same
     } 
     
     val mintBurnConditions = {
         // Mint/Burn Action
         val receiptBox = OUTPUTS(1)
+
+        // TODO: the reason why we are having to distinguish between mint/burn and devFeeWithdrawal 
+        // and have either one or the other is that OUTPUTS(1) is a receiptBox in the former case and 
+        // a devFeeBox in the latter case. If we had *always* had a receipt box in OUTPUTS(1) and 
+        // the three devFeeBoxes in OUTPUTS(2), OUTPUTS(3) AND OUTPUTS(4), 
+        // I think we would be able to simplify the contract further and we would be more flexible/general 
+        // (since we would be able to have transactions that mint/burn and distribute devFee simultaneously). 
+        // A pure devFee distribution action would be simply a transaction with a receiptBox that has 0 in R4 and R5.
+
         val rcCircDelta = receiptBox.R4[Long].get
         val bcReserveDelta = receiptBox.R5[Long].get
 
