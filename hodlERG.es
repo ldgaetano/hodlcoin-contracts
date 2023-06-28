@@ -51,7 +51,7 @@
 
     val devFeeWithdrawalConditions = {
         // Dev Fee Withdrawal Action
-        val validDevFeeOutput = if (devFeeBaseOut < devFeeBaseIn) {
+        val validDevFeeOutput = {
             val devFeeAccumulatedSplitByThree = (devFeeDelta / 3L)
 
             // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
@@ -73,7 +73,7 @@
                 //devFeeBox3.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
                 devFeeBox3.value == devFeeAccumulatedSplitByThree
             } else false
-        } else false
+        }
 
         validDevFeeOutput &&
         rcTokensOut == rcTokensIn && // token amounts must stay the same
