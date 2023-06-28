@@ -51,13 +51,16 @@
 
     val devFeeWithdrawalConditions = {
         // Dev Fee Withdrawal Action
+
+        val devFeeDeltaSplitByThree = (devFeeDelta / 3L)
+
+        val noRoundingError = devFeeDelta == 3L * devFeeDeltaSplitByThree
+
         val validDevFeeOutput = {
-            val devFeeDeltaSplitByThree = (devFeeDelta / 3L)
+            
 
             // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
             if (devFeeDeltaSplitByThree >= 1000000L) {
-                val totalDevFeeSpent = (devFeeDeltaSplitByThree * 3L) //account for rounding
-
                 // split devfee over 3 boxes
                 val devFeeBox1 = OUTPUTS(1)
                 val devFeeBox2 = OUTPUTS(2)
@@ -65,7 +68,6 @@
                 
                 // ToDo: On mainnet put in our own address!!
 
-                devFeeDelta == totalDevFeeSpent &&
                 //devFeeBox1.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
                 devFeeBox1.value == devFeeDeltaSplitByThree &&
                 //devFeeBox2.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
@@ -75,6 +77,7 @@
             } else false
         }
 
+        noRoundingError &&
         validDevFeeOutput &&
         rcTokensOut == rcTokensIn && // token amounts must stay the same
         rcCircOut == rcCircIn // token registers must stay the same
