@@ -32,6 +32,9 @@
     // since rcCircIn is always equal to: the initial amount of RCs in the bank at the moment of deployment 
     // (which is a constant that we know) and the current rcTokensIn.
 
+    // In other words, instead of reading `rcCircIn` from R4, we could do: val rcCircIn = totalConstant - rcTokensIn .
+    // Then we would have less risk of inconsistency and would be able to eliminate some conditions.
+
     val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
                             bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
 
