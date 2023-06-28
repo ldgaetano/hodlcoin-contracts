@@ -104,8 +104,8 @@
         // Exchange Equations
         val brDeltaExpected = { // rc
             val factor = 1000L
-            val rcNominalPrice = ((bcReserveInExclFee * factor) / rcCircIn)
-            (rcNominalPrice * rcCircDelta) / factor
+            val rcPrice = ((bcReserveInExclFee * factor) / rcCircIn)
+            (rcPrice * rcCircDelta) / factor
         }
         
         // Only fee when un-hodling
