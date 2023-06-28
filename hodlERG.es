@@ -56,11 +56,10 @@
 
         val noRoundingError = devFeeDelta == 3L * devFeeDeltaSplitByThree
 
+        val noDust = devFeeDeltaSplitByThree >= 1000000L // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
+
         val validDevFeeOutput = {
             
-
-            // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
-            if (devFeeDeltaSplitByThree >= 1000000L) {
                 // split devfee over 3 boxes
                 val devFeeBox1 = OUTPUTS(1)
                 val devFeeBox2 = OUTPUTS(2)
@@ -74,10 +73,10 @@
                 devFeeBox2.value == devFeeDeltaSplitByThree &&
                 //devFeeBox3.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
                 devFeeBox3.value == devFeeDeltaSplitByThree
-            } else false
         }
 
         noRoundingError &&
+        noDust &&
         validDevFeeOutput &&
         rcTokensOut == rcTokensIn && // token amounts must stay the same
         rcCircOut == rcCircIn // token registers must stay the same
