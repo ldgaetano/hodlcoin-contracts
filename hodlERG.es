@@ -42,7 +42,9 @@
 
     val devFeeDelta = devFeeBaseIn - devFeeBaseOut
 
-    val otherConditions = if (devFeeBaseOut < devFeeBaseIn) {
+    val isDevFeeWithdrawAction = (devFeeDelta > 0L)
+
+    val devFeeWithdrawalConditions = {
         // Dev Fee Withdrawal Action
         val validBankValueDelta = (bcReserveIn - devFeeDelta == bcReserveOut)
 
@@ -74,8 +76,10 @@
         rcTokensOut == rcTokensIn && // token amounts must stay the same
         rcCircOut == rcCircIn && // token registers must stay the same
         validBankValueDelta
-    } else {
-        // Mint/Redeem Action
+    } 
+    
+    val mintBurnConditions = {
+        // Mint/Burn Action
         val receiptBox = OUTPUTS(1)
         val rcCircDelta = receiptBox.R4[Long].get
         val bcReserveDelta = receiptBox.R5[Long].get
@@ -120,5 +124,6 @@
     }
 
     mandatoryBankConditions && 
-    otherConditions
+    (!isDevFeeWithdrawAction || devFeeWithdrawalConditions) && // if devFeeWithdrawal then its conditions must hold
+    (isDevFeeWithdrawAction || mintBurnConditions) // else, the conditions for minting and burning must hold
 }
