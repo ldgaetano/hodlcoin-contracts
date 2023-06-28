@@ -40,12 +40,14 @@
                                     devFeeBaseIn >= 0L &&
                                     devFeeBaseOut >= 0L
 
-    if (devFeeBaseOut < devFeeBaseIn) {
+    val devFeeDelta = devFeeBaseIn - devFeeBaseOut
+
+    val otherConditions = if (devFeeBaseOut < devFeeBaseIn) {
         // Dev Fee Withdrawal Action
-        val validBankValueDelta = (bcReserveIn - (devFeeBaseIn - devFeeBaseOut) == bcReserveOut)
+        val validBankValueDelta = (bcReserveIn - devFeeDelta == bcReserveOut)
 
         val validDevFeeOutput = if (devFeeBaseOut < devFeeBaseIn) {
-            val devFeeAccumulatedSplitByThree = ((devFeeBaseIn - devFeeBaseOut) / 3L)
+            val devFeeAccumulatedSplitByThree = (devFeeDelta / 3L)
 
             // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
             if (devFeeAccumulatedSplitByThree >= 1000000L) {
@@ -58,7 +60,7 @@
                 
                 // ToDo: On mainnet put in our own address!!
 
-                (devFeeBaseIn - devFeeBaseOut) == totalDevFeeSpent &&
+                devFeeDelta == totalDevFeeSpent &&
                 //devFeeBox1.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
                 devFeeBox1.value == devFeeAccumulatedSplitByThree &&
                 //devFeeBox2.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
@@ -69,7 +71,6 @@
         } else false
 
         validDevFeeOutput &&
-        mandatoryBankConditions &&
         rcTokensOut == rcTokensIn && // token amounts must stay the same
         rcCircOut == rcCircIn && // token registers must stay the same
         validBankValueDelta
@@ -104,18 +105,20 @@
             val devFeeTotal = ((-brDeltaExpectedWithFee * 3L) / 1000L)
 
             // R5 must be incremented by total dev fee of this redemption
-            devFeeBaseOut == (devFeeBaseIn + devFeeTotal)
+            devFeeDelta == - devFeeTotal
         } else {
             // minting action so dev amt must stay the same
-            devFeeBaseOut == devFeeBaseIn
+            devFeeDelta == 0L
         }
 
-        val validBankValueDelta = bcReserveIn + bcReserveDelta + (devFeeBaseOut - devFeeBaseIn) == bcReserveOut
+        val validBankValueDelta = bcReserveIn + bcReserveDelta - devFeeDelta == bcReserveOut
         
-        mandatoryBankConditions &&
         validRcDelta &&
         validBankValueDelta &&
         bcReserveDelta == brDeltaExpectedWithFee &&
         validDevFeeDelta 
     }
+
+    mandatoryBankConditions && 
+    otherConditions
 }
