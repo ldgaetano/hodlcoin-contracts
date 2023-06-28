@@ -1,13 +1,14 @@
-﻿//Notes:
-//* After initialization 1 hodlERG should be burned so circulating supply is never zero.
+﻿// Notes:
+// * After initialization 1 hodlERG should be burned so circulating supply is never zero.
 
 {
-    //Bank box
-    // R4: Number of hodlERG in circulation
+    // Bank box
+    //  R4: Number of hodlERG in circulation
+    //  R5: Accumulated devFee
 
-    //Receipt box (only if not in the dev fee withdrawal action)
-    // R4: Change of hodlERG in bank box
-    // R5: Change of ERG in bank box
+    // Receipt box (only if not in the dev fee withdrawal action)
+    //  R4: Change of hodlERG in bank box
+    //  R5: Change of ERG in bank box
     
     val bankBoxIn = SELF
     val bankBoxOut = OUTPUTS(0)
@@ -30,7 +31,7 @@
     val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
                             bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
 
-    val coinsConserved = totalRcIn == totalRcOut//this check also makes sure R4 is not tampered with
+    val coinsConserved = totalRcIn == totalRcOut // this check also makes sure R4 is not tampered with
 
     val mandatoryBankConditions =   bankBoxOut.value >= 10000000L &&
                                     bankBoxOut.propositionBytes == bankBoxIn.propositionBytes &&
@@ -40,22 +41,22 @@
                                     devFeeBaseOut >= 0L
 
     if (devFeeBaseOut < devFeeBaseIn) {
-        //dev fee withdrawal
+        // Dev Fee Withdrawal Action
         val validBankValueDelta = (bcReserveIn - (devFeeBaseIn - devFeeBaseOut) == bcReserveOut)
 
         val validDevFeeOutput = if (devFeeBaseOut < devFeeBaseIn) {
             val devFeeAccumulatedSplitByThree = ((devFeeBaseIn - devFeeBaseOut) / 3L)
 
-            //Only allow withdrawal of dev fee if box values are at least 0.001 ERG
+            // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
             if (devFeeAccumulatedSplitByThree >= 1000000L) {
-                val totalDevFeeSpent = (devFeeAccumulatedSplitByThree * 3L)//account for rounding
+                val totalDevFeeSpent = (devFeeAccumulatedSplitByThree * 3L) //account for rounding
 
-                //split devfee over 3 boxes
+                // split devfee over 3 boxes
                 val devFeeBox1 = OUTPUTS(1)
                 val devFeeBox2 = OUTPUTS(2)
                 val devFeeBox3 = OUTPUTS(3)
                 
-                //ToDo: On mainnet put in our own address!!
+                // ToDo: On mainnet put in our own address!!
 
                 (devFeeBaseIn - devFeeBaseOut) == totalDevFeeSpent &&
                 //devFeeBox1.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
@@ -69,43 +70,43 @@
 
         validDevFeeOutput &&
         mandatoryBankConditions &&
-        rcTokensOut == rcTokensIn &&//token amounts must stay the same
-        rcCircOut == rcCircIn &&//token registers must stay the same
+        rcTokensOut == rcTokensIn && // token amounts must stay the same
+        rcCircOut == rcCircIn && // token registers must stay the same
         validBankValueDelta
     } else {
-        //Normal mint/redeem
+        // Mint/Redeem Action
         val receiptBox = OUTPUTS(1)
         val rcCircDelta = receiptBox.R4[Long].get
         val bcReserveDelta = receiptBox.R5[Long].get
 
-        //Used to calculate true collateral (excl dev fee still in contract)
+        // Used to calculate true collateral (excl dev fee still in contract)
         val bcReserveInExclFee = bankBoxIn.value - devFeeBaseIn
 
         val validRcDelta =  (rcCircIn + rcCircDelta == rcCircOut) &&
                             rcCircOut >= 0
 
-        // exchange equations
+        // Exchange Equations
         val brDeltaExpected = { // rc
             val factor = 1000L
             val rcNominalPrice = ((bcReserveInExclFee * factor) / rcCircIn)
             (rcNominalPrice * rcCircDelta) / factor
         }
         
-        //Only fee when un-hodling
+        // Only fee when un-hodling
         val fee = if (brDeltaExpected < 0L) {
             (-brDeltaExpected* 3L) / 100L
         } else 0L
 
         val brDeltaExpectedWithFee = brDeltaExpected + fee
 
-        //dev fee of 0.3% only on withdrawal
+        // dev fee of 0.3% only on withdrawal
         val validDevFeeDelta = if (brDeltaExpected < 0L) {
             val devFeeTotal = ((-brDeltaExpectedWithFee * 3L) / 1000L)
 
-            //R5 must be incremented by total dev fee of this redemption
+            // R5 must be incremented by total dev fee of this redemption
             devFeeBaseOut == (devFeeBaseIn + devFeeTotal)
         } else {
-            //minting action so dev amt must stay the same
+            // minting action so dev amt must stay the same
             devFeeBaseOut == devFeeBaseIn
         }
 
