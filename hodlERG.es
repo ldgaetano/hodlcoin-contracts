@@ -52,11 +52,11 @@
     val devFeeWithdrawalConditions = {
         // Dev Fee Withdrawal Action
         val validDevFeeOutput = {
-            val devFeeAccumulatedSplitByThree = (devFeeDelta / 3L)
+            val devFeeDeltaSplitByThree = (devFeeDelta / 3L)
 
             // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
-            if (devFeeAccumulatedSplitByThree >= 1000000L) {
-                val totalDevFeeSpent = (devFeeAccumulatedSplitByThree * 3L) //account for rounding
+            if (devFeeDeltaSplitByThree >= 1000000L) {
+                val totalDevFeeSpent = (devFeeDeltaSplitByThree * 3L) //account for rounding
 
                 // split devfee over 3 boxes
                 val devFeeBox1 = OUTPUTS(1)
@@ -67,11 +67,11 @@
 
                 devFeeDelta == totalDevFeeSpent &&
                 //devFeeBox1.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
-                devFeeBox1.value == devFeeAccumulatedSplitByThree &&
+                devFeeBox1.value == devFeeDeltaSplitByThree &&
                 //devFeeBox2.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
-                devFeeBox2.value == devFeeAccumulatedSplitByThree &&
+                devFeeBox2.value == devFeeDeltaSplitByThree &&
                 //devFeeBox3.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
-                devFeeBox3.value == devFeeAccumulatedSplitByThree
+                devFeeBox3.value == devFeeDeltaSplitByThree
             } else false
         }
 
