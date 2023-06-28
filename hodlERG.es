@@ -28,6 +28,10 @@
     val totalRcIn = rcTokensIn + rcCircIn
     val totalRcOut = rcTokensOut + rcCircOut
 
+    // TODO: I think it might be possible to eliminate rcCircIn (and, likewise, rcCircOut), 
+    // since rcCircIn is always equal to: the initial amount of RCs in the bank at the moment of deployment 
+    // (which is a constant that we know) and the current rcTokensIn.
+
     val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
                             bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
 
