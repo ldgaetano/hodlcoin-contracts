@@ -91,7 +91,6 @@
         // A pure devFee distribution action would be simply a transaction with a receiptBox that has 0 in R4 and R5.
 
         val rcCircDelta = receiptBox.R4[Long].get
-        val bcReserveDelta = receiptBox.R5[Long].get
 
         // Used to calculate true collateral (excl dev fee still in contract)
         val bcReserveInExclFee = bankBoxIn.value - devFeeBaseIn
