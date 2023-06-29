@@ -97,27 +97,18 @@
                             rcCircOut >= 0
 
         // Exchange Equations
-        val brDeltaExpected = { // rc
+        val brDeltaExpected = { // rc  
             val factor = 1000L
             val rcPrice = ((bcReserveIn * factor) / rcCircIn)
             (rcPrice * rcCircDelta) / factor
         }
         
-        // Only fee when un-hodling
-        val fee = if (brDeltaExpected >= 0L) 0L else (-brDeltaExpected* 3L) / 100L
+        // fees paid when un-hodling
+        val fee = if (brDeltaExpected >= 0L) 0L else (-brDeltaExpected * 3L) / 100L // 3%
+        val brDeltaExpectedWithFee = brDeltaExpected + fee // TODO: can't we eliminate this line and replace `brDeltaExpectedWithFee` by `brDeltaExpected` in the line below?
+        val devFee = if (brDeltaExpected >= 0L) 0L else (-brDeltaExpectedWithFee * 3L) / 1000L // 0.3%
 
-        val brDeltaExpectedWithFee = brDeltaExpected + fee
-
-        // dev fee of 0.3% only on withdrawal
-        val validDevFeeDelta = if (brDeltaExpected < 0L) {
-            val devFeeTotal = ((-brDeltaExpectedWithFee * 3L) / 1000L)
-
-            // R5 must be incremented by total dev fee of this redemption
-            devFeeDelta == - devFeeTotal
-        } else {
-            // minting action so dev amt must stay the same
-            devFeeDelta == 0L
-        }
+        val validDevFeeDelta = devFeeDelta == - devFee
 
         validRcDelta &&
         bcReserveDelta == brDeltaExpectedWithFee &&
