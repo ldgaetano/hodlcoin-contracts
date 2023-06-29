@@ -13,13 +13,13 @@
     val bankBoxIn = SELF
     val rcCircIn = bankBoxIn.R4[Long].get
     val devFeeBaseIn = bankBoxIn.R5[Long].get
-    val bcReserveIn = bankBoxIn.value
+    val bcReserveIn = bankBoxIn.value - devFeeBaseIn
     val rcTokensIn = bankBoxIn.tokens(0)._2
     
     val bankBoxOut = OUTPUTS(0)
     val rcCircOut = bankBoxOut.R4[Long].get
     val devFeeBaseOut = bankBoxOut.R5[Long].get
-    val bcReserveOut = bankBoxOut.value
+    val bcReserveOut = bankBoxOut.value - devFeeBaseOut
     val rcTokensOut = bankBoxOut.tokens(0)._2
     
     val totalRcIn = rcTokensIn + rcCircIn
@@ -42,7 +42,8 @@
 
     val bcReserveDelta = if (isDevFeeWithdrawAction) 0L else receiptBox.R5[Long].get
 
-    val validBankValueDelta = bcReserveIn + bcReserveDelta - devFeeDelta == bcReserveOut
+    val validBankValueDelta = bankBoxIn.value + bcReserveDelta - devFeeDelta == bankBoxOut.value
+    // TODO: double check this validity condition
 
     val mandatoryBankConditions =   bankBoxOut.value >= 10000000L &&
                                     bankBoxOut.propositionBytes == bankBoxIn.propositionBytes &&
@@ -92,16 +93,13 @@
 
         val rcCircDelta = receiptBox.R4[Long].get
 
-        // Used to calculate true collateral (excl dev fee still in contract)
-        val bcReserveInExclFee = bankBoxIn.value - devFeeBaseIn
-
         val validRcDelta =  (rcCircIn + rcCircDelta == rcCircOut) &&
                             rcCircOut >= 0
 
         // Exchange Equations
         val brDeltaExpected = { // rc
             val factor = 1000L
-            val rcPrice = ((bcReserveInExclFee * factor) / rcCircIn)
+            val rcPrice = ((bcReserveIn * factor) / rcCircIn)
             (rcPrice * rcCircDelta) / factor
         }
         
