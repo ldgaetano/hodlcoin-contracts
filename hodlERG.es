@@ -103,10 +103,12 @@
             (rcPrice * rcCircDelta) / factor
         }
         
-        // fees paid when un-hodling
-        val fee = if (brDeltaExpected >= 0L) 0L else (-brDeltaExpected * 3L) / 100L // 3%
+        val isMintAction = brDeltaExpected >= 0L
+
+        // fees paid only when burning
+        val fee = if (isMintAction) 0L else (-brDeltaExpected * 3L) / 100L // 3%
         val brDeltaExpectedWithFee = brDeltaExpected + fee // TODO: can't we eliminate this line and replace `brDeltaExpectedWithFee` by `brDeltaExpected` in the line below?
-        val devFee = if (brDeltaExpected >= 0L) 0L else (-brDeltaExpectedWithFee * 3L) / 1000L // 0.3%
+        val devFee = if (isMintAction) 0L else (-brDeltaExpectedWithFee * 3L) / 1000L // 0.3%
 
         val validDevFeeDelta = devFeeDelta == - devFee
 
