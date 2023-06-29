@@ -27,9 +27,6 @@
     val rcTokensOut = bankBoxOut.tokens(0)._2
 
     val rcCircOut = tokenTotalSupply - rcTokensOut
-    
-    val totalRcIn = rcTokensIn + rcCircIn
-    val totalRcOut = rcTokensOut + rcCircOut
 
     val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
                             bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
