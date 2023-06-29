@@ -70,8 +70,7 @@
         noRoundingError &&
         noDust &&
         validDevFeeOutputs &&
-        rcTokensOut == rcTokensIn && // amount of hodlERGs in the bank must stay the same
-        rcCircOut == rcCircIn // amount of hodlERGs in circulation must stay the same
+        rcTokensOut == rcTokensIn // amount of hodlERGs in the bank must stay the same
     } 
     
     val mintBurnConditions = {
