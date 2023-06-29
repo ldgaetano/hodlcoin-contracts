@@ -41,6 +41,9 @@
     val isDevFeeWithdrawAction = (devFeeDelta > 0L)
 
     val bcReserveDelta = if (isDevFeeWithdrawAction) 0L else receiptBox.R5[Long].get
+    // TODO: what prevents a user from putting whatever value he/she wants in R5 just to satisfy the 
+    // condition in line 119? Wouldn't it make more sense and wouldn't it be more tamper-resistant to do:
+    // val bcReserveDelta = bcReserveOut - bcReserveIn ?
 
     val validBankValueDelta = bankBoxIn.value + bcReserveDelta - devFeeDelta == bankBoxOut.value
     // TODO: double check this validity condition
@@ -103,7 +106,7 @@
             (rcPrice * rcCircDelta) / factor
         }
         
-        val isMintAction = brDeltaExpected >= 0L
+        val isMintAction = rcCircDelta >= 0L
 
         // fees paid only when burning
         val fee = if (isMintAction) 0L else (-brDeltaExpected * 3L) / 100L // 3%
@@ -113,7 +116,7 @@
         val validDevFeeDelta = devFeeDelta == - devFee
 
         validRcDelta &&
-        bcReserveDelta == brDeltaExpectedWithFee &&
+        bcReserveDelta == brDeltaExpectedWithFee && // TODO: Double-check this. Not convinced that this does anything meaningful. See my comment in line 44.
         validDevFeeDelta 
     }
 
