@@ -1,17 +1,19 @@
-﻿// Notes:
-// * After initialization 1 hodlERG should be burned so circulating supply is never zero.
+﻿{
+    // --- NOTES ---
+    // * After initialization 1 hodlERG should be burned so circulating supply is never zero.
 
-{
+
+    // --- REGISTERS ---
     // Bank box
-    //  R4: Accumulated devFee
+    // R4: Accumulated devFee
 
-    // Receipt box (only if not in the dev fee withdrawal action)
-    // The registers here are not checked in the contract and are inserted by the backend and are PURELY INFORMATIONAL for price and amount history.
-    //  R4: Change of hodlERG in bank box
-    //  R5: Change of ERG in bank box
 
-    val tokenTotalSupply = 97739924000000000L //Same as ERG
+    // --- CONSTANTS ---
+    val tokenTotalSupply = 97739924000000000L // Same as ERG
+    val preciseFactor = 1000L
+
     
+    // --- LOGIC  ---
     val bankBoxIn = SELF
     val devFeeBaseIn = bankBoxIn.R4[Long].get
     val bcReserveIn = bankBoxIn.value - devFeeBaseIn
@@ -80,9 +82,8 @@
 
         // Exchange Equations
         val brDeltaExpected = { // rc  
-            val factor = 1000L
-            val rcPrice = ((bcReserveIn * factor) / rcCircIn)
-            (rcPrice * rcCircDelta) / factor
+            val rcPrice = ((bcReserveIn * preciseFactor) / rcCircIn)
+            (rcPrice * rcCircDelta) / preciseFactor
         }
         
         val isMintAction = rcCircDelta >= 0L
