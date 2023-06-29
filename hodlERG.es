@@ -11,18 +11,15 @@
     //  R5: Change of ERG in bank box     // TODO: Do we really need this?
     
     val bankBoxIn = SELF
-    val bankBoxOut = OUTPUTS(0)
-    
     val rcCircIn = bankBoxIn.R4[Long].get
     val devFeeBaseIn = bankBoxIn.R5[Long].get
     val bcReserveIn = bankBoxIn.value
-    
     val rcTokensIn = bankBoxIn.tokens(0)._2
     
+    val bankBoxOut = OUTPUTS(0)
     val rcCircOut = bankBoxOut.R4[Long].get
     val devFeeBaseOut = bankBoxOut.R5[Long].get
     val bcReserveOut = bankBoxOut.value
-    
     val rcTokensOut = bankBoxOut.tokens(0)._2
     
     val totalRcIn = rcTokensIn + rcCircIn
@@ -31,7 +28,6 @@
     // TODO: I think it might be possible to eliminate rcCircIn (and, likewise, rcCircOut), 
     // since rcCircIn is always equal to: the initial amount of RCs in the bank at the moment of deployment 
     // (which is a constant that we know) and the current rcTokensIn.
-
     // In other words, instead of reading `rcCircIn` from R4, we could do: val rcCircIn = totalConstant - rcTokensIn .
     // Then we would have less risk of inconsistency and would be able to eliminate some conditions.
 
@@ -57,40 +53,33 @@
                                     validBankValueDelta
 
     val devFeeWithdrawalConditions = {
-        // Dev Fee Withdrawal Action
-
         val devFeeDeltaSplitByThree = (devFeeDelta / 3L)
-
         val noRoundingError = devFeeDelta == 3L * devFeeDeltaSplitByThree
-
         val noDust = devFeeDeltaSplitByThree >= 1000000L // Only allow withdrawal of dev fee if box values are at least 0.001 ERG
 
-        val validDevFeeOutput = {
+        val validDevFeeOutputs = {
+            // split devfee over 3 boxes
+            val devFeeBox1 = OUTPUTS(1)
+            val devFeeBox2 = OUTPUTS(2)
+            val devFeeBox3 = OUTPUTS(3)
             
-                // split devfee over 3 boxes
-                val devFeeBox1 = OUTPUTS(1)
-                val devFeeBox2 = OUTPUTS(2)
-                val devFeeBox3 = OUTPUTS(3)
-                
-                // ToDo: On mainnet put in our own address!!
-
-                //devFeeBox1.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
-                devFeeBox1.value == devFeeDeltaSplitByThree &&
-                //devFeeBox2.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
-                devFeeBox2.value == devFeeDeltaSplitByThree &&
-                //devFeeBox3.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
-                devFeeBox3.value == devFeeDeltaSplitByThree
+            // ToDo: On mainnet put in our own address!!
+            //devFeeBox1.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
+            devFeeBox1.value == devFeeDeltaSplitByThree &&
+            //devFeeBox2.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
+            devFeeBox2.value == devFeeDeltaSplitByThree &&
+            //devFeeBox3.propositionBytes == PK("xxxxxxxxxxxx").propBytes &&  
+            devFeeBox3.value == devFeeDeltaSplitByThree
         }
 
         noRoundingError &&
         noDust &&
-        validDevFeeOutput &&
+        validDevFeeOutputs &&
         rcTokensOut == rcTokensIn && // amount of hodlERGs in the bank must stay the same
         rcCircOut == rcCircIn // amount of hodlERGs in circulation must stay the same
     } 
     
     val mintBurnConditions = {
-        // Mint/Burn Action
         val receiptBox = OUTPUTS(1)
 
         // TODO: the reason why we are having to distinguish between mint/burn and devFeeWithdrawal 
@@ -118,9 +107,7 @@
         }
         
         // Only fee when un-hodling
-        val fee = if (brDeltaExpected < 0L) {
-            (-brDeltaExpected* 3L) / 100L
-        } else 0L
+        val fee = if (brDeltaExpected >= 0L) 0L else (-brDeltaExpected* 3L) / 100L
 
         val brDeltaExpectedWithFee = brDeltaExpected + fee
 
