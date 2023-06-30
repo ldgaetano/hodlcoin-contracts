@@ -91,11 +91,11 @@
         validReserveDelta &&
         validTreasuryDelta
     }
-    
-    val validAction = if (isTreasuryWithdrawalAction) treasuryWithdrawalConditions 
-    else if (isMintAction) mintConditions
-    else burnConditions
 
     generalConditions && 
-    validAction
+    {
+        if (isTreasuryWithdrawalAction) treasuryWithdrawalConditions 
+        else if (isMintAction) mintConditions
+        else burnConditions
+    }
 }
