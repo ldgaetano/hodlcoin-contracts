@@ -32,7 +32,7 @@
 
     val amountWithdrawnFromTreasury = devTreasuryIn - devTreasuryOut
 
-    val isDevFeeWithdrawAction = (amountWithdrawnFromTreasury > 0L)
+    val isTreasuryWithdrawalAction = (amountWithdrawnFromTreasury > 0L)
 
     val reserveDelta = reserveOut - reserveIn
 
@@ -46,28 +46,28 @@
                         devTreasuryOut >= 0L &&
                         validBankValueDelta
 
-    val devFeeWithdrawalConditions = {
+    val TreasuryWithdrawalConditions = {
         val amountWithdrawnFromTreasurySplitByThree = (amountWithdrawnFromTreasury / 3L)
         val noRoundingError = amountWithdrawnFromTreasury == 3L * amountWithdrawnFromTreasurySplitByThree
         val noDust = amountWithdrawnFromTreasurySplitByThree >= 50000000L // Only allow withdrawal of dev fee if box values are at least 0.05 ERG.
 
-        val validDevFeeOutputs = {
-            // split devfee over 3 boxes
-            val devFeeBox1 = OUTPUTS(1)
-            val devFeeBox2 = OUTPUTS(2)
-            val devFeeBox3 = OUTPUTS(3)
+        val threeEqualWithdrawalOutputs = {
+            // split withdrawn amount to 3 boxes
+            val box1 = OUTPUTS(1)
+            val box2 = OUTPUTS(2)
+            val box3 = OUTPUTS(3)
             
-            devFeeBox1.propositionBytes == PK("9hHondX3uZMY2wQsXuCGjbgZUqunQyZCNNuwGu6rL7AJC8dhRGa").propBytes &&  
-            devFeeBox1.value == amountWithdrawnFromTreasurySplitByThree &&
-            devFeeBox2.propositionBytes == PK("9gnBtmSRBMaNTkLQUABoAqmU2wzn27hgqVvezAC9SU1VqFKZCp8").propBytes &&  
-            devFeeBox2.value == amountWithdrawnFromTreasurySplitByThree &&
-            devFeeBox3.propositionBytes == PK("9iE2MadGSrn1ivHmRZJWRxzHffuAk6bPmEv6uJmPHuadBY8td5u").propBytes &&  
-            devFeeBox3.value == amountWithdrawnFromTreasurySplitByThree
+            box1.propositionBytes == PK("9hHondX3uZMY2wQsXuCGjbgZUqunQyZCNNuwGu6rL7AJC8dhRGa").propBytes &&  
+            box1.value == amountWithdrawnFromTreasurySplitByThree &&
+            box2.propositionBytes == PK("9gnBtmSRBMaNTkLQUABoAqmU2wzn27hgqVvezAC9SU1VqFKZCp8").propBytes &&  
+            box2.value == amountWithdrawnFromTreasurySplitByThree &&
+            box3.propositionBytes == PK("9iE2MadGSrn1ivHmRZJWRxzHffuAk6bPmEv6uJmPHuadBY8td5u").propBytes &&  
+            box3.value == amountWithdrawnFromTreasurySplitByThree
         }
 
         noRoundingError &&
         noDust &&
-        validDevFeeOutputs &&
+        threeEqualWithdrawalOutputs &&
         hodlCoinsOut == hodlCoinsIn // amount of hodlERGs in the bank must stay the same
     } 
     
@@ -95,6 +95,6 @@
     }
 
     bankConditions && 
-    (!isDevFeeWithdrawAction || devFeeWithdrawalConditions) && // if devFeeWithdrawal then its conditions must hold
-    (isDevFeeWithdrawAction || mintBurnConditions) // else, the conditions for minting and burning must hold
+    (!isTreasuryWithdrawalAction || TreasuryWithdrawalConditions) && // if treasury withdrawal, then its conditions must hold
+    (isTreasuryWithdrawalAction || mintBurnConditions) // else, the conditions for minting and burning must hold
 }
