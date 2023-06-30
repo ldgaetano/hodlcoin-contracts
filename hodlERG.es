@@ -28,6 +28,7 @@
 
     val reserveDelta = reserveOut - reserveIn
     val treasuryDelta = treasuryOut - treasuryIn
+    val hodlCoinsCircDelta = hodlCoinsCircOut  - hodlCoinsCircIn
 
     val isTreasuryWithdrawalAction = (treasuryDelta < 0L)
     val isMintAction = hodlCoinsCircDelta >= 0L
@@ -66,7 +67,6 @@
     } 
 
     val mintConditions = {
-        val hodlCoinsCircDelta = hodlCoinsCircOut - hodlCoinsCircIn
         val price = ((reserveIn * precisionFactor) / hodlCoinsCircIn)
         val expectedAmountDeposited = hodlCoinsCircDelta * price / precisionFactor 
 
@@ -91,9 +91,11 @@
         validReserveDelta &&
         validTreasuryDelta
     }
+    
+    val validAction = if (isTreasuryWithdrawalAction) treasuryWithdrawalConditions 
+    else if (isMintAction) mintConditions
+    else burnConditions
 
     generalConditions && 
-    if (isTreasuryWithdrawalAction) treasuryWithdrawalConditions 
-    else if (isMintAction) mintConditions
-    else mintBurnConditions
+    validAction
 }
