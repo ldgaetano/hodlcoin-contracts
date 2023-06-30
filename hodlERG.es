@@ -74,20 +74,20 @@
     val mintBurnConditions = {
         val receiptBox = OUTPUTS(1)
 
-        val hodlCoincCircDelta = hodlCoinsCircOut - hodlCoinsCircIn
+        val hodlCoinsCircDelta = hodlCoinsCircOut - hodlCoinsCircIn
 
-        val hodlCoincCircDeltaExpected = {  
+        val hodlCoinsCircDeltaExpected = {  
             val rcPrice = ((reserveIn * precisionFactor) / hodlCoinsCircIn)
-            (rcPrice * hodlCoincCircDelta) / precisionFactor
+            (rcPrice * hodlCoinsCircDelta) / precisionFactor
         }
         
-        val isMintAction = hodlCoincCircDelta >= 0L
+        val isMintAction = hodlCoinsCircDelta >= 0L
 
         // fees paid only when burning
-        val fee = if (isMintAction) 0L else (-hodlCoincCircDeltaExpected * 3L) / 100L // 3%
-        val devFeeExpected = if (isMintAction) 0L else (-hodlCoincCircDeltaExpected * 3L) / 1000L // 0.3%
+        val fee = if (isMintAction) 0L else (-hodlCoinsCircDeltaExpected * 3L) / 100L // 3%
+        val devFeeExpected = if (isMintAction) 0L else (-hodlCoinsCircDeltaExpected * 3L) / 1000L // 0.3%
 
-        val validFeeDelta = reserveDelta == (hodlCoincCircDeltaExpected + fee) // Needed to ensure the user pays the fee, no?
+        val validFeeDelta = reserveDelta == (hodlCoinsCircDeltaExpected + fee) // Needed to ensure the user pays the fee, no?
         val validDevFeeDelta = amountWithdrawnFromTreasury == - devFeeExpected // TODO: BUG FIXME
 
         validFeeDelta &&
