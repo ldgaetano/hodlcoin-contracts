@@ -36,14 +36,10 @@
     val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
                             bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
 
-    val validBankValueDelta = bankBoxIn.value + reserveDelta + treasuryDelta == bankBoxOut.value
-    // TODO: double check this validity condition: do we still need it?
-
     val generalConditions = bankBoxOut.value >= 10000000L &&
                             bankBoxOut.propositionBytes == bankBoxIn.propositionBytes &&
                             tokenIdsConserved &&
-                            treasuryNeverNegative &&
-                            validBankValueDelta
+                            treasuryNeverNegative
 
     val treasuryWithdrawalConditions = {
         val amountPerDev = - (treasuryDelta / 3L)
