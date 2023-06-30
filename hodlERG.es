@@ -5,7 +5,7 @@
 
     // --- REGISTERS ---
     // BankBox
-    // R4: devTreasury where devFees are accumulated until withdrawn
+    // R4: treasury where devFees are accumulated until withdrawn
 
     // --- CONSTANTS ---
     val tokenTotalSupply = 97739924000000000L   // Same as ERG
@@ -15,23 +15,24 @@
 
     // --- LOGIC  ---
     val bankBoxIn = SELF
-    val devTreasuryIn = bankBoxIn.R4[Long].get
-    val reserveIn = bankBoxIn.value - devTreasuryIn
+    val treasuryIn = bankBoxIn.R4[Long].get
+    val reserveIn = bankBoxIn.value - treasuryIn
     val hodlCoinsIn = bankBoxIn.tokens(0)._2  // hodlCoins in the BankBox
     val hodlCoinsCircIn = tokenTotalSupply - hodlCoinsIn // hodlCoins in circulation
     
     val bankBoxOut = OUTPUTS(0)
-    val devTreasuryOut = bankBoxOut.R4[Long].get
-    val reserveOut = bankBoxOut.value - devTreasuryOut
+    val treasuryOut = bankBoxOut.R4[Long].get
+    val reserveOut = bankBoxOut.value - treasuryOut
     val hodlCoinsOut = bankBoxOut.tokens(0)._2
     val hodlCoinsCircOut = tokenTotalSupply - hodlCoinsOut
 
     val reserveDelta = reserveOut - reserveIn
-    val treasuryDelta = devTreasuryOut - devTreasuryIn
+    val treasuryDelta = treasuryOut - treasuryIn
 
     val isTreasuryWithdrawalAction = (treasuryDelta < 0L)
     val isMintAction = hodlCoinsCircDelta >= 0L
 
+    val treasuryNeverNegative = treasuryIn >= 0L && treasuryOut >= 0L
     val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
                             bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
 
@@ -41,8 +42,7 @@
     val generalConditions = bankBoxOut.value >= 10000000L &&
                             bankBoxOut.propositionBytes == bankBoxIn.propositionBytes &&
                             tokenIdsConserved &&
-                            devTreasuryIn >= 0L &&
-                            devTreasuryOut >= 0L &&
+                            treasuryNeverNegative &&
                             validBankValueDelta
 
     val treasuryWithdrawalConditions = {
