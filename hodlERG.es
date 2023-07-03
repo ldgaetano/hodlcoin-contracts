@@ -1,101 +1,198 @@
 ﻿{
-    // --- NOTES ---
-    // * tokens(0) in the BankBox is the hodlERG token
-    // * After initialization 1 hodlERG token should be burned so circulating supply is never zero.
 
-    // --- REGISTERS ---
-    // BankBox
-    // R4: treasury where devFees are accumulated until withdrawn
+    // ===== Contract Information ===== //
+    // Name: Hodl ERG
+    // Description: Contract rewrite and the original hodlERG.es contract found here: https://github.com/pulsarz/hodlcoin-contracts/blob/f9191ce68275a976461af54aa16c85db5ed383bf/hodlERG.es
 
-    // --- CONSTANTS ---
-    val tokenTotalSupply = 97739924000000000L   // Same as ERG
-    val precisionFactor = 1000L
-    val fee = (precisionFactor * 3L) / 100L     // 3%, only applied when burning
-    val devFee = (precisionFactor * 3L) / 1000L // 0.3%, only applied when burning
+    // ===== Box Contents ===== //
+    // Tokens
+    // 1. (HodlERGTokenId, TokenTotalSupply)
+    // 2. (HodlERGBankSingleton, 1)
+    // Registers
+    // R4: Long TreasuryAmount
 
-    // --- LOGIC  ---
-    val bankBoxIn = SELF
-    val treasuryIn = bankBoxIn.R4[Long].get
-    val reserveIn = bankBoxIn.value - treasuryIn
-    val hodlCoinsIn = bankBoxIn.tokens(0)._2  // hodlCoins in the BankBox
-    val hodlCoinsCircIn = tokenTotalSupply - hodlCoinsIn // hodlCoins in circulation
+    // ===== Relevant Transactions ===== //
+    // 1. Mint Tx
+    // Inputs: Bank, UserPK
+    // DataInputs: None
+    // Outputs: Bank, UserPK
+    // Context Variables: None
+    // 2. Burn Tx
+    // Inputs: Bank, UserPK
+    // DataInputs: None
+    // Outputs: Bank, UserPK
+    // Context Variables: None
+    // 3. Treasury Withdraw Tx
+    // Inputs: Bank
+    // DataInputs: None
+    // Outptus: Bank, Dev1, Dev2, Dev3
+    // Context Variables: None
+
+    // ===== Compile Time Constants ($) ===== //
+    // None
+
+    // ===== Context Variables (@) ===== //
+    // None
+
+    // ===== Relevant Variables ===== //
+    val tokenTotalSupply: Long = 97739924000000000L             // Same as ERG total supply
+    val precisionFactor: Long = 1000L
+    val fee: Long = (precisionFactor * 3L) / 100L               // 3% bank fee applied when burning hodlERG
+    val devFee: Long = (precisionFactor * 3L) / 1000L           // 0.3% dev fee applied when burning hodlERG
     
-    val bankBoxOut = OUTPUTS(0)
-    val treasuryOut = bankBoxOut.R4[Long].get
-    val reserveOut = bankBoxOut.value - treasuryOut
-    val hodlCoinsOut = bankBoxOut.tokens(0)._2
-    val hodlCoinsCircOut = tokenTotalSupply - hodlCoinsOut
+    val treasuryIn: Long = SELF.R4[Long].get                    // The value of the treasury accumulated from fees
+    val reserveIn: Long = SELF.value - treasuryIn               // Actual reserve minus treasury, since ERG is used for both
+    val hodlCoinsIn: Long = SELF.tokens(0)._2                   // hodlERG token amount in the bank box
+    val hodlCoinsCircIn: Long = tokenTotalSupply - hodlCoinsIn  // hodlERG in circulation since this value represents what is not inside the box
 
-    val reserveDelta = reserveOut - reserveIn
-    val treasuryDelta = treasuryOut - treasuryIn
-    val hodlCoinsCircDelta = hodlCoinsCircOut  - hodlCoinsCircIn
+    // Outputs
+    val bankBoxOUT: Box = OUTPUTS(0)
+    val treasuryOUT: Long = bankBoxOUT.R4[Long].get
+    val reserveOUT: Long = bankBoxOUT.value - treasuryOut 
+    val hodlCoinsOUT: Long = bankBoxOUT.tokens(0)._2
+    val hodlCoinsCircOUT: Long = tokenTotalSupply - hodlCoinsOut
 
-    val isTreasuryWithdrawalAction = (treasuryDelta < 0L)
-    val isMintAction = hodlCoinsCircDelta >= 0L
+    val reserveDelta: Long = reserveOut - reserveIn
+    val treasuryDelta: Long = treasuryOut - treasuryIn 
+    val hodlCoinsCircDelta: Long = hodlCoinsCircOut - hodlCoinsCircIn 
 
-    val treasuryNeverNegative = treasuryIn >= 0L && treasuryOut >= 0L
-    val tokenIdsConserved = bankBoxOut.tokens(0)._1 == bankBoxIn.tokens(0)._1 && // hodlERG token preserved
-                            bankBoxOut.tokens(1)._1 == bankBoxIn.tokens(1)._1    // hodlERG Bank NFT token preserved
+    val isMintTx: Boolean = (hodlCoinsCircDelta >= 0L)
+    val isTreasuryWithdrawTx: Boolean = (treasuryDelta < 0L)
 
-    val generalConditions = bankBoxOut.value >= 10000000L &&
-                            bankBoxOut.propositionBytes == bankBoxIn.propositionBytes &&
-                            tokenIdsConserved &&
-                            treasuryNeverNegative
+    val validGeneralConditions: Boolean = {
 
-    val treasuryWithdrawalConditions = {
-        val amountPerDev = - (treasuryDelta / 3L)
-        val noRoundingError = treasuryDelta == - 3L * amountPerDev
-        val noDust = amountPerDev >= 50000000L // Only allow withdrawal of dev fee if box values are at least 0.05 ERG.
+        val validValue: Boolean = (bankBoxOUT.value >= 10000000L)
+        
+        val validContract: Boolean = (bankBoxOUT.propositionBytes == SELF.propositionBytes)
+        
+        val validTokenIds: Boolean = {
 
-        val threeEqualWithdrawalOutputs = { // split withdrawn amount to 3 boxes
-            val box1 = OUTPUTS(1)
-            val box2 = OUTPUTS(2)
-            val box3 = OUTPUTS(3)
-            
-            box1.propositionBytes == PK("9hHondX3uZMY2wQsXuCGjbgZUqunQyZCNNuwGu6rL7AJC8dhRGa").propBytes &&  
-            box1.value == amountPerDev &&
-            box2.propositionBytes == PK("9gnBtmSRBMaNTkLQUABoAqmU2wzn27hgqVvezAC9SU1VqFKZCp8").propBytes &&  
-            box2.value == amountPerDev &&
-            box3.propositionBytes == PK("9iE2MadGSrn1ivHmRZJWRxzHffuAk6bPmEv6uJmPHuadBY8td5u").propBytes &&  
-            box3.value == amountPerDev
+            allOf(Coll(
+                (bankBoxOUT.tokens(0)._1 == SELF.tokens(0)._1),
+                (bankBoxOUT.tokens(1)._1 == SELF.tokens(1)._1)
+            ))
+
         }
 
-        noRoundingError &&
-        noDust &&
-        threeEqualWithdrawalOutputs &&
-        hodlCoinsOut == hodlCoinsIn // amount of hodlERGs in the bank must stay the same
-    } 
+        val validTreasuryNeverNegative: Boolean = {
+        
+            allOf(Coll(
+                (treasuryIn >= 0L),
+                (treasuryOut >= 0L)
+            ))
+        
+        }
+        
+        allOf(Coll(
+            validValue,
+            validBankContract,
+            validTokenIds,
+            validTreasuryNeverNegative
+        ))
 
-    val mintConditions = {
-        val price = ((reserveIn * precisionFactor) / hodlCoinsCircIn)
-        val expectedAmountDeposited = hodlCoinsCircDelta * price / precisionFactor 
-
-        val validReserveDelta = reserveDelta == expectedAmountDeposited
-        val validTreasuryDelta = treasuryDelta == 0
-
-        validReserveDelta &&
-        validTreasuryDelta
     }
 
-    val burnConditions = {
-        val hodlCoinsBurned = hodlCoinsCircIn - hodlCoinsCircOut 
-        val price = ((reserveIn * precisionFactor) / hodlCoinsCircIn)
-        val expectedAmountBeforeFees = hodlCoinsBurned * price / precisionFactor 
-        val feeAmount = expectedAmountBeforeFees * fee / precisionFactor
-        val devFeeAmount = expectedAmountBeforeFees * devFee / precisionFactor
-        val expectedAmountWithdrawn = expectedAmountBeforeFees - feeAmount - devFeeAmount
+    if (isMintTx) {
 
-        val validReserveDelta = reserveDelta == - expectedAmountWithdrawn - devFeeAmount
-        val validTreasuryDelta = treasuryDelta == devFeeAmount
+        // ===== Mint Tx ===== //
+        val validMintTx: Boolean = {
 
-        validReserveDelta &&
-        validTreasuryDelta
+            // Outputs
+            val bankBoxOUT: Box = OUTPUTS(0)
+
+            val price: Long = ((reserveIn * precisionFactor) / hodlCoinsCircIn)
+            val expectedAmountDeposited: Long = hodlCoinsCircDelta * price / precisionFactor
+            
+            val validReserveDelta: Boolean = (reserveDelta == expectedAmountDeposited)
+            val validTreasuryDelta: Boolean = (treasuryDelta == 0)
+
+            allOf(Coll(
+                validGeneralConditions,
+                validReserveDelta,
+                validTreasuryDelta
+            ))
+
+        }
+
+        sigmaProp(validMintTx)
+
+    } else if (isTreasuryWithdrawTx) {
+
+        // ===== Treasury Withdraw Tx ===== //
+        val validTreasuryWithdrawTx: Boolean = {
+
+            // Outputs
+            val dev1: Box = OUTPUTS(1)
+            val dev2: Box = OUTPUTS(2)
+            val dev3: Box = OUTPUTS(3)
+
+            val amountPerDev: Long = - (treasuryDelta / 3L)
+
+            val validNoRoundingError: Boolean = (treasuryDelta == -3L * amountPerDev)
+            val validNoDust: Boolean = (amountPerDev >= 50000000L) // Only allow withdrawal of dev fee if box values are at least 0.05 ERG.
+
+            val validBank: Boolean = {
+
+                val validReserves: Boolean = (reserveDelta == 0)
+                val validHodlCoinsAmount: Boolean = (hodlCoinsOut == hodlCoinsIn)
+
+                allOf(
+                    validReserves,
+                    validHodlCoinsAmount
+                )
+
+            }
+
+            val validDevs: Boolean = {
+
+                allOf(Coll(
+                    (dev1.value == amountPerDev),
+                    (dev1.propositionBytes == PK("9hHondX3uZMY2wQsXuCGjbgZUqunQyZCNNuwGu6rL7AJC8dhRGa").propBytes),
+                    (dev2.value == amountPerDev),
+                    (dev2.propositionBytes == PK("9gnBtmSRBMaNTkLQUABoAqmU2wzn27hgqVvezAC9SU1VqFKZCp8").propBytes),
+                    (dev3.value == amountPerDev),
+                    (dev3.propositionBytes == PK("9iE2MadGSrn1ivHmRZJWRxzHffuAk6bPmEv6uJmPHuadBY8td5u").propBytes)
+                ))
+                
+            }
+
+            allOf(Coll(
+                validGeneralConditions,
+                validNoRoundingError,
+                validNoDust,
+                validBank,
+                validDevs
+            ))
+
+        }
+
+        sigmaProp(validTreasuryWithdrawTx)
+
+    } else {
+
+        // ===== Burn Tx ===== //
+        val validBurnTx: Boolean = {
+
+            val hodlCoinsBurned: Long = hodlCoinsCircIn - hodlCoinsCircOut 
+            val price: Long = (reserveIn * precisionFactor) / hodlCoinsCircIn
+            val expectedAmountBeforeFees: Long = (hodlCoinsBurned * price) / precisionFactor
+            val feeAmount: Long = (expectedAmountBeforeFees * fee) / precisionFactor
+            val devFeeAmount: Long = (expectedAmountBeforeFees * devFee) / precisionFactor
+            val expectedAmountWithdrawn: Long = expectedAmountBeforeFees - feeAmount - devFeeAmount
+
+            val validReserveDelta: Boolean = (reserveDelta == - expectedAmountWithdrawn - devFeeAmount)
+            val validTreasuryDelta: Boolean = (treasuryDelta == devFeeAmount)
+
+            allOf(Coll(
+                validGeneralConditions,
+                validReserveDelta,
+                validTreasuryDelta
+            ))
+
+        }
+
+        sigmaProp(validBurnTx)
+
     }
 
-    generalConditions && 
-    {
-        if (isTreasuryWithdrawalAction) treasuryWithdrawalConditions 
-        else if (isMintAction) mintConditions
-        else burnConditions
-    }
 }
