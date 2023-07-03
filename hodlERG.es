@@ -85,7 +85,7 @@
         
         allOf(Coll(
             validValue,
-            validBankContract,
+            validContract,
             validTokenIds,
             validTreasuryNeverNegative
         ))
