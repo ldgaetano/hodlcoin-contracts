@@ -97,9 +97,6 @@
         // ===== Mint Tx ===== //
         val validMintTx: Boolean = {
 
-            // Outputs
-            val bankBoxOUT: Box = OUTPUTS(0)
-
             val price: Long = ((reserveIn * precisionFactor) / hodlCoinsCircIn)
             val expectedAmountDeposited: Long = hodlCoinsCircDelta * price / precisionFactor
             
