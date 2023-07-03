@@ -104,7 +104,7 @@
             val expectedAmountDeposited: Long = hodlCoinsCircDelta * price / precisionFactor
             
             val validReserveDelta: Boolean = (reserveDelta == expectedAmountDeposited)
-            val validTreasuryDelta: Boolean = (treasuryDelta == 0)
+            val validTreasuryDelta: Boolean = (treasuryDelta == 0L)
 
             allOf(Coll(
                 validGeneralConditions,
@@ -133,7 +133,7 @@
 
             val validBank: Boolean = {
 
-                val validReserves: Boolean = (reserveDelta == 0)
+                val validReserves: Boolean = (reserveDelta == 0L)
                 val validHodlCoinsAmount: Boolean = (hodlCoinsOut == hodlCoinsIn)
 
                 allOf(
