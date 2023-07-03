@@ -133,10 +133,10 @@
                 val validReserves: Boolean = (reserveDelta == 0L)
                 val validHodlCoinsAmount: Boolean = (hodlCoinsOut == hodlCoinsIn)
 
-                allOf(
+                allOf(Coll(
                     validReserves,
                     validHodlCoinsAmount
-                )
+                ))
 
             }
 
