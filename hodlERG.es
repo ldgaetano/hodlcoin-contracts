@@ -2,7 +2,7 @@
 
     // ===== Contract Information ===== //
     // Name: Hodl ERG
-    // Description: Contract rewrite and the original hodlERG.es contract found here: https://github.com/pulsarz/hodlcoin-contracts/blob/f9191ce68275a976461af54aa16c85db5ed383bf/hodlERG.es
+    // Description: Contract rewrite of the original hodlERG.es contract found here: https://github.com/pulsarz/hodlcoin-contracts/blob/f9191ce68275a976461af54aa16c85db5ed383bf/hodlERG.es
 
     // ===== Box Contents ===== //
     // Tokens
